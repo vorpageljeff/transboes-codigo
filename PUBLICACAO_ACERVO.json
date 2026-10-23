@@ -1,0 +1,24 @@
+{
+  "data": "2026-10-23",
+  "origem": "Transboes_portal_mobile",
+  "arquivos_incluidos": 169,
+  "exclusoes": [
+    {
+      "path": ".DS_Store",
+      "reason": "local configuration"
+    },
+    {
+      "path": "backend/transboes.db",
+      "reason": "runtime/private/generated format"
+    },
+    {
+      "path": "docs/Manual_de_Uso_Trans_Boes.pdf",
+      "reason": "runtime/private/generated format"
+    },
+    {
+      "path": "documentos de formalizacao do projeto/Prompt_Codex_Trans_Boes_MVP.txt",
+      "reason": "private operational documentation"
+    }
+  ],
+  "nota": "Publicação de acervo. Credenciais, dados operacionais, sessões e backups não foram incluídos. Não é release de produção."
+}

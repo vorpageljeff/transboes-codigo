@@ -1,0 +1,16 @@
+name: innovagro-portainer
+services:
+  portainer:
+    image: portainer/portainer-ce:2.21.5-alpine
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    ports:
+      - "127.0.0.1:9443:9443"
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+volumes:
+  portainer_data:
+

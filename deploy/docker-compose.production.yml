@@ -1,0 +1,75 @@
+name: transboes
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  db:
+    image: postgres:16.4-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks: [private]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *default-logging
+
+  api:
+    image: ${APP_IMAGE:-transboes-api:local}
+    build:
+      context: ../backend
+    restart: unless-stopped
+    mem_limit: 768m
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    environment:
+      APP_ENV: production
+      DATABASE_URL: ${APP_DATABASE_URL:?Configure o usuário restrito da API}
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      AUTO_ASSIGN_TRIP: ${AUTO_ASSIGN_TRIP:-false}
+      AUTO_RELEASE_VEHICLE: ${AUTO_RELEASE_VEHICLE:-true}
+      FREIGHT_VALIDATION_MODE: ${FREIGHT_VALIDATION_MODE:-MANUAL}
+      GPS_PROVIDER: ${GPS_PROVIDER:-mock}
+      WHATSAPP_PROVIDER: ${WHATSAPP_PROVIDER:-mock}
+      PREPARATION_MINUTES: ${PREPARATION_MINUTES:-40}
+      VEHICLE_RELEASE_RULE: ${VEHICLE_RELEASE_RULE:-AFTER_UNLOAD}
+      MAINTENANCE_ALERT_KM: ${MAINTENANCE_ALERT_KM:-1000}
+      MAINTENANCE_ALERT_DAYS: ${MAINTENANCE_ALERT_DAYS:-15}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [private, proxy]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.transboes-api.rule=Host(`${API_DOMAIN}`)
+      - traefik.http.routers.transboes-api.entrypoints=websecure
+      - traefik.http.routers.transboes-api.tls=true
+      - traefik.http.routers.transboes-api.tls.certresolver=letsencrypt
+      - traefik.http.services.transboes-api.loadbalancer.server.port=8000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *default-logging
+
+networks:
+  private:
+    internal: true
+  proxy:
+    external: true
+
+volumes:
+  postgres_data:

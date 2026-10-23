@@ -1,0 +1,11 @@
+[Unit]
+Description=Backup PostgreSQL diário da TransBoes
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+Environment=TRANSBOES_APP_DIR=/opt/innovagro/apps/transboes
+Environment=BACKUP_DIR=/opt/innovagro/backups/transboes
+ExecStart=/opt/innovagro/apps/transboes/deploy/scripts/backup.sh
+
